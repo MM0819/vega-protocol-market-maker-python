@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Optional
 
 import requests
@@ -166,4 +167,17 @@ def print_error_if_exists(tx_hash: str):
 
 
 def print_error_if_exists_retry(tx_hash: str, attempt: int):
-    pass
+    response = requests.get(f"{config.tendermint_url}/tx?hash=0x{tx_hash}")
+    if response.status_code != 200:
+        logging.error(response.json())
+    elif response.json().get("result") is not None:
+        tx_result = response.json()["result"]["tx_result"]
+        code = tx_result["code"]
+        if code > 0:
+            logging.error(tx_result["info"])
+    elif response.json().get("error") is not None:
+        if attempt < 10:
+            time.sleep(0.25)
+            print_error_if_exists_retry(tx_hash, attempt + 1)
+        else:
+            logging.error(f"Transaction not found: {tx_hash}")
