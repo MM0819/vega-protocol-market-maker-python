@@ -1,3 +1,6 @@
-websocket-client
+python-binance
+black
 rel
 requests
+websocket-client
+python-dotenv
