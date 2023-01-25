@@ -25,11 +25,13 @@ class SimpleMarketMaker(BaseStrategy):
         vega_store: VegaStore,
         config: Config,
         wallet: VegaWallet,
+        update_freq_seconds: int = 30,
     ):
         super().__init__(config=config)
         self._binance_store = binance_store
         self._vega_store = vega_store
         self._wallet = wallet
+        self._update_freq_seconds = update_freq_seconds
 
     def get_total_balance(self, settlement_asset_id: str) -> float:
         balance = 0
@@ -64,7 +66,7 @@ class SimpleMarketMaker(BaseStrategy):
             submissions.append(
                 OrderSubmission(
                     market.market_id,
-                    size,
+                    size / price,
                     price,
                     "TIME_IN_FORCE_GTC",
                     "TYPE_LIMIT",
@@ -143,7 +145,7 @@ class SimpleMarketMaker(BaseStrategy):
     def _run(self):
         while True:
             self.execute()
-            time.sleep(5)
+            time.sleep(self._update_freq_seconds)
 
     def run(self):
         self.thread = threading.Thread(target=self._run, daemon=True)
