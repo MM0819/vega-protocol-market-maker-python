@@ -64,7 +64,7 @@ class SimpleMarketMaker(BaseStrategy):
             submissions.append(
                 OrderSubmission(
                     market.market_id,
-                    size,
+                    size / price,
                     price,
                     "TIME_IN_FORCE_GTC",
                     "TYPE_LIMIT",
