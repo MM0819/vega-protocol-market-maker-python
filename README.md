@@ -16,7 +16,7 @@ The logic of the market maker is contained within `market_maker/strategy/simple_
 Configuration for running this example is as follows:
 
 - With a Python 3.10 environment manager of choice, configure an environment based on `requirements.txt`. (If you're currently lacking a manager, `poetry` is a good choice for a full-featured manager or `venv` for light virtual environments.)
-- Follow the instructions at [create-wallet](https://docs.vega.xyz/testnet/tools/vega-wallet/cli-wallet/latest/create-wallet) to download a CLI wallet for your system and ensure you are able to generate wallets
+- Follow the instructions at [create-wallet](https://docs.vega.xyz/testnet/tools/vega-wallet/cli-wallet/latest/create-wallet) to download a CLI wallet for your system, import networks (`fairground` for the testnet) and ensure you are able to generate wallets
 - The Vega Wallet v2 API requires a token to be generated which the bot will later attach to transaction requests, so this must be set up next.
   - Make a copy of `.env.sample` to a file called `.env`
   - To do so, follow the instructions at [get-started](https://docs.vega.xyz/testnet/api/vega-wallet/v2-api/get-started#connect-with-bots), specifically those under the 'connect with bots' section. Make a note of the token you are given, and update `WALLET_TOKEN` in your `.env` file to the value.
