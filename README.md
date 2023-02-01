@@ -21,4 +21,8 @@ Configuration for running this example is as follows:
   - Make a copy of `.env.sample` to a file called `.env`
   - To do so, follow the instructions at [get-started](https://docs.vega.xyz/testnet/api/vega-wallet/v2-api/get-started#connect-with-bots), specifically those under the 'connect with bots' section. Make a note of the token you are given, and update `WALLET_TOKEN` in your `.env` file to the value.
 - Once completed, run the wallet service with `vegawallet service run --load-tokens --network fairground --automatic-consent`. This connects the wallet to the `fairground` network and `--automatic-consent` means that the wallet will skip requesting manual approval when it receives a transaction and instead always propagates it.
-- Now that the wallet service is up and running, enter your Python environment and run `python -m main` to start up the market maker. You should now be able to log in to the Fairground console at [fairground.wtf](http://fairground.wtf) and see the orders being placed.
+- Now that the wallet service is up and running, we can start the market maker itself.
+  - Open the [console](https://console.fairground.wtf) and select a market of interest. Find the ID for the market either in the URL once that market is selected or the `Key Details` tab on the market page ![image](https://user-images.githubusercontent.com/702798/216101979-1966edb1-c99e-4128-a46a-cf97313385a4.png)
+  - Set `MARKET_ID` in `.env` to this ID
+  - Set `BINANCE_MARKET` in `.env` to the name of a market from which to draw reference prices. This should be a Binance Spot symbol
+  - Enter your Python environment and run `python -m main` to start up the market maker. You should now be able to log in to the Fairground [console](https://console.fairground.wtf) and see the orders being placed.
