@@ -56,15 +56,22 @@ def get_accounts(party_id: str, config: Config) -> list[dict]:
     )
 
 
-def get_open_orders(party_id: str, config: Config) -> list[dict]:
+def get_open_orders(party_id: str, node_url: str) -> list[dict]:
     return execute_get_request(
-        f"orders?partyId={party_id}&liveOnly=true", "orders", config=config
+        f"orders?filter.partyIds={party_id}&liveOnly=true", "orders", node_url=node_url
     )
 
 
-def get_positions(party_id: str, config: Config) -> list[dict]:
+def get_positions(
+    party_id: str, node_url: str, market_id: Optional[str] = None
+) -> list[dict]:
+    filt = f"positions?filter.partyIds={party_id}"
+    if market_id is not None:
+        filt += "&filter.marketIds={market_id}"
     return execute_get_request(
-        f"positions?partyId={party_id}", "positions", config=config
+        filt,
+        "positions",
+        node_url=node_url,
     )
 
 
