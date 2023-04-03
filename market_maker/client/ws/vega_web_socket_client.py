@@ -53,7 +53,7 @@ class VegaWebSocketClient:
         self, market_id: str, party_id: str, callback: Callable[[dict], Any]
     ) -> None:
         self.subscribe_endpoint(
-            f"{self._data_node_url}/stream/orders?marketId={market_id}&partyId={party_id}",
+            f"{self._data_node_url}/stream/orders?marketIds={market_id}&partyIds={party_id}",
             "orders",
             callback=callback,
         )

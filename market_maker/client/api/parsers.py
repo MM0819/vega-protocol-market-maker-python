@@ -43,7 +43,7 @@ def parse_order(
         node["id"],
         node["marketId"],
         convert_to_decimals(position_decimal_places, float(node["size"])),
-        convert_to_decimals(position_decimal_places, float(node["remaining"])),
+        convert_to_decimals(position_decimal_places, float(node.get("remaining", 0))),
         convert_to_decimals(price_decimal_places, float(node["price"])),
         node["type"],
         node["timeInForce"],
@@ -61,7 +61,7 @@ def parse_position(
     return Position(
         node["partyId"],
         node["marketId"],
-        convert_to_decimals(position_decimal_places, float(node["openVolume"])),
+        convert_to_decimals(position_decimal_places, float(node.get("openVolume", 0))),
         convert_to_decimals(price_decimal_places, float(node["averageEntryPrice"])),
         convert_to_decimals(asset_decimal_places, float(node["unrealisedPnl"])),
         convert_to_decimals(asset_decimal_places, float(node["realisedPnl"])),
