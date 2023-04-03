@@ -131,7 +131,9 @@ class VegaStore:
                     order["marketId"]
                 ).decimal_places,
             )
-            for order in order_dict.get("snapshot", order_dict.get("updates"))["orders"]
+            for order in order_dict.get("snapshot", order_dict.get("updates")).get(
+                "orders", []
+            )
         ]
         with self._orders_lock:
             for order in orders:
@@ -200,6 +202,7 @@ class VegaStore:
             )
             for o in api.get_open_orders(party_id=party_id, config=self._config)
         }
+
         with self._orders_lock:
             self._orders = orders
 
