@@ -39,17 +39,30 @@ def parse_account(node: dict, asset_decimal_places: int) -> Account:
 def parse_order(
     node: dict, position_decimal_places: int, price_decimal_places: int
 ) -> Order:
-    return Order(
-        node["id"],
-        node["marketId"],
-        convert_to_decimals(position_decimal_places, float(node["size"])),
-        convert_to_decimals(position_decimal_places, float(node["remaining"])),
-        convert_to_decimals(price_decimal_places, float(node["price"])),
-        node["type"],
-        node["timeInForce"],
-        node["status"],
-        node["partyId"],
+    if "remaining" in node:
+        return Order(
+            node["id"],
+            node["marketId"],
+            convert_to_decimals(position_decimal_places, float(node["size"])),
+            convert_to_decimals(position_decimal_places, float(node["remaining"])),
+            convert_to_decimals(price_decimal_places, float(node["price"])),
+            node["type"],
+            node["timeInForce"],
+            node["status"],
+            node["partyId"],
     )
+    else:
+        return Order(
+            node["id"],
+            node["marketId"],
+            convert_to_decimals(position_decimal_places, float(node["size"])),
+            0,
+            convert_to_decimals(price_decimal_places, float(node["price"])),
+            node["type"],
+            node["timeInForce"],
+            node["status"],
+            node["partyId"],
+        )
 
 
 def parse_position(
@@ -58,19 +71,41 @@ def parse_position(
     price_decimal_places: int,
     asset_decimal_places: int,
 ) -> Position:
-    return Position(
-        node["partyId"],
-        node["marketId"],
-        convert_to_decimals(position_decimal_places, float(node["openVolume"])),
-        convert_to_decimals(price_decimal_places, float(node["averageEntryPrice"])),
-        convert_to_decimals(asset_decimal_places, float(node["unrealisedPnl"])),
-        convert_to_decimals(asset_decimal_places, float(node["realisedPnl"])),
-    )
+    if "openVolume" in node:
+        return Position(
+            node["partyId"],
+            node["marketId"],
+            convert_to_decimals(position_decimal_places, float(node["openVolume"])),
+            convert_to_decimals(price_decimal_places, float(node["averageEntryPrice"])),
+            convert_to_decimals(asset_decimal_places, float(node["unrealisedPnl"])),
+            convert_to_decimals(asset_decimal_places, float(node["realisedPnl"])),
+        )
+    else:
+        return Position(
+            node["partyId"],
+            node["marketId"],
+            0,
+            convert_to_decimals(price_decimal_places, float(node["averageEntryPrice"])),
+            convert_to_decimals(asset_decimal_places, float(node["unrealisedPnl"])),
+            convert_to_decimals(asset_decimal_places, float(node["realisedPnl"])),
+        )
 
 
 def parse_market(node: dict) -> Market:
     instrument = node["tradableInstrument"]["instrument"]
-    return Market(
+    if "future" in instrument:
+        return Market(
+            node["id"],
+            node["state"],
+            node["tradingMode"],
+            int(node["decimalPlaces"]),
+            int(node["positionDecimalPlaces"]),
+            instrument["code"],
+            instrument["name"],
+            instrument["future"]["settlementAsset"],
+        )
+    elif "perpetual" in instrument:
+        return Market(
         node["id"],
         node["state"],
         node["tradingMode"],
@@ -78,9 +113,16 @@ def parse_market(node: dict) -> Market:
         int(node["positionDecimalPlaces"]),
         instrument["code"],
         instrument["name"],
-        instrument["future"]["settlementAsset"],
+        instrument["perpetual"]["settlementAsset"],
     )
+    else:
+        raise Exception("Unknown instrumet!")
 
+def parse_liquidity_commitment(node: dict, commitment: float) -> float:
+    if node["status"] == "STATUS_ACTIVE":
+        commitment = node["commitmentAmount"]
+        
+    return commitment
 
 parsers = {
     "markets": parse_market,
