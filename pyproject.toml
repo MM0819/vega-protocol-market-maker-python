@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "vega-protocol-market-maker-python"
+version = "0.1.0"
+description = ""
+authors = ["David Siska <62546419+davidsiska-vega@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "vega_protocol_market_maker_python"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-binance = "^1.0.19"
+black = "^23.9.1"
+rel = "^0.4.9"
+requests = "^2.31.0"
+websocket-client = "^1.6.3"
+python-dotenv = "^1.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

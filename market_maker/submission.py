@@ -42,6 +42,7 @@ def _submission_to_json(
         "side": submission.side,
         "size": str(convert_from_decimals(position_decimals, submission.size)),
         "price": str(convert_from_decimals(price_decimals, submission.price)),
+        "postOnly": True,
     }
 
 
@@ -86,4 +87,63 @@ def instruction_to_json(
                 _cancellation_to_json(s) for s in instruction.cancellations
             ],
         }
+    }
+
+def liquidity_commitment_submission(
+    market_id: str, amount: float, asset_decimals: int, proposed_fee: float
+):
+    return {
+        "liquidityProvisionSubmission": _liquidity_provision_base(
+            market_id=market_id,
+            amount=amount,
+            asset_decimals=asset_decimals,
+            proposed_fee=proposed_fee,
+        )
+    }
+
+
+def liquidity_commitment_amendment(
+    market_id: str, amount: float, asset_decimals: int, proposed_fee: float
+):
+    return {
+        "liquidityProvisionAmendment": _liquidity_provision_base(
+            market_id=market_id,
+            amount=amount,
+            asset_decimals=asset_decimals,
+            proposed_fee=proposed_fee,
+        )
+    }
+
+
+def liquidity_commitment_cancellation(market_id: str):
+    return {
+        "liquidityProvisionCancellation": {
+            "marketId": market_id,
+        },
+    }
+
+
+def _liquidity_provision_base(
+    market_id: str, amount: float, asset_decimals: int, proposed_fee: float
+):
+    return {
+        "marketId": market_id,
+        "commitmentAmount": str(
+            convert_from_decimals(decimal_places=asset_decimals, number=amount)
+        ),
+        "fee": str(proposed_fee),
+        "buys": [
+            {
+                "offset": "0",
+                "proportion": "1",
+                "reference": "PEGGED_REFERENCE_BEST_BID",
+            },
+        ],
+        "sells": [
+            {
+                "offset": "0",
+                "proportion": "1",
+                "reference": "PEGGED_REFERENCE_BEST_ASK",
+            },
+        ],
     }

@@ -7,6 +7,8 @@ from binance.client import Client
 from market_maker.config import Config
 from market_maker.models import ReferencePrice
 
+import logging
+
 
 class BinanceStore:
     def __init__(self, symbols_to_subscribe: list[str]):
@@ -52,14 +54,18 @@ class BinanceStore:
         self._ws_client.stop()
 
     def _on_tick(self, tick: dict[str, Any]) -> None:
-        tick_data = tick["data"]
-        ref_price = ReferencePrice(
-            symbol=tick_data["s"],
-            bid_price=float(tick_data["b"]),
-            ask_price=float(tick_data["a"]),
-        )
-        with self._lock:
-            self._reference_prices[ref_price.symbol] = ref_price
+        if "data" in tick:
+            tick_data = tick["data"]
+            ref_price = ReferencePrice(
+                symbol=tick_data["s"],
+                bid_price=float(tick_data["b"]),
+                ask_price=float(tick_data["a"]),
+            )
+            with self._lock:
+                self._reference_prices[ref_price.symbol] = ref_price
+        else:
+            logging.info(f"No data in tick.")
+        
 
     def get_reference_prices(self) -> list[ReferencePrice]:
         with self._lock:

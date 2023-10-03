@@ -8,6 +8,9 @@ from market_maker.submission import (
     OrderSubmission,
     BatchMarketInstruction,
     instruction_to_json,
+    liquidity_commitment_submission,
+    liquidity_commitment_amendment,
+    liquidity_commitment_cancellation,
 )
 from market_maker.wallet import VegaWallet
 from market_maker.strategy.base import BaseStrategy
@@ -63,15 +66,16 @@ class SimpleMarketMaker(BaseStrategy):
                 if side == "BUY"
                 else reference_price * (1 + offset)
             )
-            submissions.append(
-                OrderSubmission(
-                    market.market_id,
-                    size / price,
-                    price,
-                    "TIME_IN_FORCE_GTC",
-                    "TYPE_LIMIT",
-                    f"SIDE_{side}",
-                )
+            if size > 0:
+                submissions.append(
+                    OrderSubmission(
+                        market.market_id,
+                        size / price,
+                        price,
+                        "TIME_IN_FORCE_GTC",
+                        "TYPE_LIMIT",
+                        f"SIDE_{side}",
+                    )
             )
         return submissions
 
@@ -89,14 +93,45 @@ class SimpleMarketMaker(BaseStrategy):
                 open_volume = position.open_volume if position else 0
                 average_entry_price = position.average_entry_price if position else 0
 
+                # Then liquidity commitment, if any
+                commitmentOnMarket = self._vega_store._liquidity_commitment
+
                 # Then current balance to correctly size orders
                 balance = self.get_total_balance(market.settlement_asset_id)
-                bid_volume = max(
-                    (balance * 0.5) - (open_volume * average_entry_price), 0
-                )
-                offer_volume = max(
-                    (balance * 0.5) + (open_volume * average_entry_price), 0
-                )
+                to_commit = 0.12 * balance # how much liquidity do I want to be providing 
+
+                # Submit / amend liquidity provision (note that decreases in stake only happen at epoch bdry)
+                if commitmentOnMarket == 0.0:
+                    # we are submitting for 1st time
+                    new_liquidity_provision = liquidity_commitment_submission(
+                        market_id=market.market_id,
+                        amount=to_commit,
+                        asset_decimals=self._vega_store.get_asset_by_id(asset_id=market.settlement_asset_id).decimal_places,
+                        proposed_fee=0.03,
+                    )
+                    self._wallet.submit_transaction(new_liquidity_provision)
+
+                
+                
+                commitment = 1.0 * to_commit # find how to grab market.liquidity.stakeToCcyVolume, but that's 1.0 atm  
+                commitment = 1.3 * commitment # to be on the safe side
+                bid_volume = commitment
+                offer_volume = commitment
+                offset_buy = 0
+                offset_sell = 0 
+                if open_volume > 0:
+                    offset_buy = 0.010
+                else:
+                    offset_buy = 0.010
+
+
+
+                #bid_volume = max(
+                #    (balance * 0.1) - (open_volume * average_entry_price), 0
+                #)
+                #offer_volume = max(
+                #    (balance * 0.1) + (open_volume * average_entry_price), 0
+                #)
 
                 logging.info(
                     f"Open volume = {open_volume}; "
@@ -120,10 +155,10 @@ class SimpleMarketMaker(BaseStrategy):
                     )
 
                 buy_submissions = self.build_order_submissions(
-                    reference_price.bid_price, "BUY", market, bid_volume
+                    reference_price.bid_price+offset_buy, "BUY", market, bid_volume
                 )
                 sell_submissions = self.build_order_submissions(
-                    reference_price.ask_price, "SELL", market, offer_volume
+                    reference_price.ask_price+offset_sell, "SELL", market, offer_volume
                 )
                 submissions = sell_submissions + buy_submissions
                 logging.info(

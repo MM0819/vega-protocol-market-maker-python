@@ -16,6 +16,8 @@ class VegaStore:
         self._assets: dict[str, Asset] = {}
         self._positions: dict[str, Position] = {}
         self._markets: dict[str, Market] = {}
+        self._party_id = ""
+        self._liquidity_commitment = 0.0
 
         self._accounts_lock = Lock()
         self._orders_lock = Lock()
@@ -26,6 +28,8 @@ class VegaStore:
         self._ws_client = VegaWebSocketClient(data_node_url=config.ws_url)
 
     def start(self, market_id: str, party_id: str) -> None:
+        self._party_id=party_id
+        self.load_liquidity_commintment(party_id=party_id,market_id=market_id)
         self.load_data(party_id=party_id)
 
         self._ws_client.subscribe_market_data(
@@ -135,9 +139,9 @@ class VegaStore:
         ]
         with self._orders_lock:
             for order in orders:
-                if order.status != "STATUS_ACTIVE":
+                if order.status != 1: # 1 is STATUS_ACTIVE
                     self._orders.pop(order.order_id, None)
-                else:
+                elif order.party_id == self._party_id:
                     self._orders[order.order_id] = order
 
     def _update_position(self, position_dict: dict) -> None:
@@ -168,6 +172,13 @@ class VegaStore:
         )
         with self._accounts_lock:
             self._accounts[account.get_id()] = account
+
+    def load_liquidity_commintment(self, party_id: str, market_id: str) -> None:
+        liquidity_provisions = api.get_liquidity_commitment(party_id=party_id, market_id=market_id, config=self._config)
+        commitment = self._liquidity_commitment
+        for liq_prov in liquidity_provisions:
+            commitment = parsers.parse_liquidity_commitment(liq_prov, commitment)
+        self._liquidity_commitment = commitment
 
     def load_data(self, party_id: str) -> None:
         self._assets = {

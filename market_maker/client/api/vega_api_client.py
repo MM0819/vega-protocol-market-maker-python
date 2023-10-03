@@ -58,7 +58,7 @@ def get_accounts(party_id: str, config: Config) -> list[dict]:
 
 def get_open_orders(party_id: str, config: Config) -> list[dict]:
     return execute_get_request(
-        f"orders?partyId={party_id}&liveOnly=true", "orders", config=config
+        f"orders?filter.partyIds={party_id}&filter.liveOnly=true", "orders", config=config
     )
 
 
@@ -67,6 +67,10 @@ def get_positions(party_id: str, config: Config) -> list[dict]:
         f"positions?partyId={party_id}", "positions", config=config
     )
 
+def get_liquidity_commitment(party_id: str, market_id: str, config: Config):
+    return execute_get_request(
+        f"liquidity/provisions?marketId={market_id}&partyId={party_id}", "liquidityProvisions", config=config
+    )
 
 def get_token(config: Config) -> Optional[str]:
     response = requests.post(
